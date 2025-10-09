@@ -1,0 +1,133 @@
+<!-- Главная страница с документами -->
+<div *ngIf="!pdfSrc" class="home-container">
+  <header class="toolbar">
+    <div class="toolbar-content">
+      <span class="title">PDF Просмотрщик</span>
+    </div>
+  </header>
+
+  <div class="home-content">
+    <h1>Документация</h1>
+    <div class="pdf-links">
+      <div class="pdf-card" (click)="loadSelectedPdf('document1.pdf')">
+        <div class="pdf-icon">📄</div>
+        <h3>Руководство пользователя</h3>
+        <p>Полное руководство по использованию системы</p>
+      </div>
+
+      <div class="pdf-card" (click)="loadSelectedPdf('document2.pdf')">
+        <div class="pdf-icon">📊</div>
+        <h3>Техническая документация</h3>
+        <p>Технические спецификации и API</p>
+      </div>
+
+      <div class="pdf-card" (click)="loadSelectedPdf('document3.pdf')">
+        <div class="pdf-icon">📋</div>
+        <h3>Политика конфиденциальности</h3>
+        <p>Условия использования и политика приватности</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PDF Просмотрщик -->
+<div *ngIf="pdfSrc" class="pdf-viewer-container">
+  <header class="toolbar">
+    <div class="toolbar-content">
+      <!-- Кнопка возврата -->
+      <button (click)="goBack()" class="back-button">
+        ← Назад
+      </button>
+
+      <div class="toolbar-group">
+        <button (click)="incrementZoom(-0.1)" class="toolbar-button" title="Уменьшить">
+          ➖
+        </button>
+
+        <input class="page-input" type="number" placeholder="Увеличение" [(ngModel)]="zoom">
+
+        <button (click)="incrementZoom(0.1)" class="toolbar-button" title="Увеличить">
+          ➕
+        </button>
+      </div>
+
+      <div class="toolbar-group">
+        <button (click)="incrementPage(-1)" class="toolbar-button">
+          ← Предыдущий
+        </button>
+
+        <input class="page-input" type="number" placeholder="Страница" [(ngModel)]="page">
+
+        <span *ngIf="pdf">из {{ pdf.numPages }}</span>
+        <button (click)="incrementPage(1)" class="toolbar-button">
+          Следующий →
+        </button>
+      </div>
+
+      <!-- Поиск в toolbar -->
+      <div class="toolbar-group">
+        <input #queryInp class="search-input" type="text" placeholder="Поиск..." [value]="pdfQuery"
+          (input)="searchQueryChanged($any($event.target).value)" (keyup.enter)="searchQueryChanged(queryInp.value)">
+      </div>
+
+      <!-- Дополнительные действия -->
+      <div class="dropdown">
+        <button class="toolbar-button">⋮</button>
+        <div class="dropdown-content">
+          <button (click)="rotate(90)">Повернуть на 90°</button>
+          <button (click)="rotate(-90)">Повернуть на -90°</button>
+          <div class="divider"></div>
+          <button (click)="loadPdf()">Перезагрузить PDF</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="pdf-content">
+    <!-- Индикатор загрузки -->
+    <div *ngIf="!isLoaded && progressData" class="progress-container">
+      <div class="progress-bar">
+        <div class="progress-fill" [style.width.%]="(progressData.loaded / progressData.total) * 100"></div>
+      </div>
+      <div class="progress-text">
+        Загрузка: {{ getInt((progressData.loaded / progressData.total) * 100) }}%
+      </div>
+    </div>
+
+    <!-- Отображение ошибок -->
+    <div *ngIf="error" class="error-container">
+      <div class="error-card">
+        <div class="error-header">
+          <span>⚠️</span>
+          <h3>Ошибка загрузки PDF</h3>
+        </div>
+        <div class="error-content">
+          <p>{{ error.message || error }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- PDF Viewer -->
+    <pdf-viewer 
+      [src]="pdfSrc"
+      [(page)]="page"
+      [rotation]="rotation"
+      [original-size]="originalSize"
+      [show-all]="showAll"
+      [fit-to-page]="fitToPage"
+      (after-load-complete)="afterLoadComplete($event)"
+      [zoom]="zoom"
+      [zoom-scale]="zoomScale"
+      [stick-to-page]="stickToPage"
+      [render-text]="renderText"
+      [external-link-target]="'blank'"
+      [autoresize]="autoresize"
+      (error)="onError($event)"
+      (on-progress)="onProgress($event)"
+      (page-rendered)="pageRendered($event)"
+      (pages-initialized)="pageInitialized($event)"
+      (pageChange)="pageChange($event)"
+      [show-borders]="false"
+    ></pdf-viewer>
+  </div>
+</div>
